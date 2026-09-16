@@ -1,0 +1,297 @@
+/* Interactive Live Exam Room Styling */
+.exam-room-header {
+  background: #140E13;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 1rem 2rem;
+}
+
+[data-theme="light"] .exam-room-header {
+  background: #FFFFFF !important;
+  border-bottom-color: #E2E8F0 !important;
+}
+
+.timer-badge-box {
+  background: rgba(157, 126, 143, 0.15);
+  border: 1px solid var(--border-subtle);
+  color: #FFFFFF;
+  font-family: monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 0.4rem 1rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-theme="light"] .timer-badge-box {
+  background: #F1EFF4 !important;
+  color: #111827 !important;
+  border-color: #CBD5E1 !important;
+}
+
+.timer-badge-box.warning {
+  border-color: #dc3545;
+  color: #dc3545;
+  animation: pulse-warn 1s infinite;
+}
+
+.violation-badge-box {
+  background: rgba(220, 53, 69, 0.15);
+  border: 1px solid rgba(220, 53, 69, 0.4);
+  color: #FFFFFF;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+[data-theme="light"] .violation-badge-box {
+  background: #FEE2E2 !important;
+  color: #991B1B !important;
+  border-color: #FCA5A5 !important;
+}
+
+@keyframes pulse-warn {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.exam-card-main {
+  background: #140E13;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .exam-card-main {
+  background: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Option Items */
+.option-label-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: #0F0F11;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.75rem;
+  margin-bottom: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .option-label-card {
+  background: #F8FAFC !important;
+  border-color: #CBD5E1 !important;
+  color: #1E293B !important;
+}
+
+.option-label-card:hover {
+  border-color: var(--accent-rose);
+  background: rgba(157, 126, 143, 0.08);
+}
+
+[data-theme="light"] .option-label-card:hover {
+  border-color: #6C4A60 !important;
+  background: #F1EFF4 !important;
+}
+
+.option-label-card input[type="radio"] {
+  display: none;
+}
+
+.option-label-card input[type="radio"]:checked + .option-custom-radio {
+  background: var(--accent-rose);
+  border-color: var(--accent-rose);
+  color: #181216;
+}
+
+[data-theme="light"] .option-label-card input[type="radio"]:checked + .option-custom-radio {
+  background: #6C4A60 !important;
+  border-color: #6C4A60 !important;
+  color: #FFFFFF !important;
+}
+
+.option-label-card.selected-active {
+  border-color: var(--accent-rose);
+  background: rgba(157, 126, 143, 0.18);
+  box-shadow: 0 0 0 1px var(--accent-rose);
+}
+
+[data-theme="light"] .option-label-card.selected-active {
+  border-color: #6C4A60 !important;
+  background: #F3E8FF !important;
+}
+
+.option-custom-radio {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--accent-rose);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+/* Question Palette Navigator */
+.palette-card-box {
+  background: #140E13;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+[data-theme="light"] .palette-card-box {
+  background: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+.question-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  gap: 0.6rem;
+}
+
+.palette-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-subtle);
+  background: #0F0F11;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .palette-btn {
+  background: #F1F5F9 !important;
+  color: #1E293B !important;
+  border-color: #CBD5E1 !important;
+}
+
+.palette-btn:hover {
+  border-color: var(--accent-rose);
+}
+
+.palette-btn.active-current {
+  outline: 2px solid #FFFFFF;
+  outline-offset: 2px;
+}
+
+[data-theme="light"] .palette-btn.active-current {
+  outline-color: #6C4A60 !important;
+}
+
+.palette-btn.answered {
+  background: #28a745 !important;
+  color: #FFFFFF !important;
+  border-color: #28a745 !important;
+}
+
+.palette-btn.flagged {
+  background: #ffc107 !important;
+  color: #181216 !important;
+  border-color: #ffc107 !important;
+  font-weight: 800;
+}
+
+.palette-btn.answered-flagged {
+  background: #8b5cf6 !important;
+  color: #FFFFFF !important;
+  border-color: #8b5cf6 !important;
+  font-weight: 800;
+}
+
+.legend-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-right: 0.4rem;
+}
+
+/* Floating Picture-in-Picture WebCam Widget */
+.floating-webcam-box {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 220px;
+  background: #140E13;
+  border: 2px solid var(--accent-rose);
+  border-radius: 0.85rem;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  transition: all 0.3s ease;
+}
+
+[data-theme="light"] .floating-webcam-box {
+  background: #FFFFFF !important;
+  border-color: #6C4A60 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+.floating-webcam-box .webcam-header {
+  background: rgba(157, 126, 143, 0.15);
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.floating-webcam-box .rec-dot {
+  width: 9px;
+  height: 9px;
+  background: #dc3545;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-warn 1s infinite;
+}
+
+.floating-webcam-box .webcam-body {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000000;
+}
+
+.floating-webcam-box video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.floating-webcam-box .webcam-overlay-status {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #FFFFFF;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.3rem;
+  font-weight: 600;
+}
+
+.btn-clean-icon {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}

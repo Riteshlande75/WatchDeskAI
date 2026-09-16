@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Result - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+
+            <!-- Result Summary Hero Banner Card -->
+            <div class="text-center mb-5 p-4 p-md-5 rounded-4 result-hero-card">
+                
+                {% if is_passed %}
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle text-success" style="width: 84px; height: 84px; background: rgba(40, 167, 69, 0.15); border: 2px solid #28a745;">
+                        <i class="fa-solid fa-trophy fs-1"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6 mb-3 fw-bold">ASSESSMENT PASSED</span>
+                {% else %}
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle text-danger" style="width: 84px; height: 84px; background: rgba(220, 53, 69, 0.15); border: 2px solid #dc3545;">
+                        <i class="fa-solid fa-shield-xmark fs-1"></i>
+                    </div>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6 mb-3 fw-bold">ASSESSMENT NOT PASSED</span>
+                {% endif %}
+
+                <h2 class="fw-bold text-main mb-2">{{ exam.title }}</h2>
+                <p class="text-secondary opacity-75 mb-4">Submitted on <span class="fw-semibold text-main">{{ submission.submitted_at }}</span></p>
+
+                <!-- Percentage Performance Progress Bar -->
+                <div class="mx-auto mb-4" style="max-width: 500px;">
+                    <div class="d-flex justify-content-between align-items-center mb-1.5 small fw-bold">
+                        <span class="text-secondary">Overall Performance</span>
+                        <span class="{% if is_passed %}text-success{% else %}text-danger{% endif %}">{{ submission.percentage }}%</span>
+                    </div>
+                    <div class="progress" style="height: 10px; background-color: var(--border-subtle); border-radius: 10px; overflow: hidden;">
+                        <div class="progress-bar {% if is_passed %}bg-success{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ submission.percentage }}%;" aria-valuenow="{{ submission.percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Grid -->
+                <div class="row g-3 justify-content-center mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 rounded-3 result-metric-card">
+                            <div class="text-secondary opacity-75 extra-small">Score Obtained</div>
+                            <div class="fs-4 fw-bold text-main">{{ submission.score }} / {{ submission.total_marks }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 rounded-3 result-metric-card">
+                            <div class="text-secondary opacity-75 extra-small">Percentage</div>
+                            <div class="fs-4 fw-bold {% if is_passed %}text-success{% else %}text-danger{% endif %}">{{ submission.percentage }}%</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 rounded-3 result-metric-card">
+                            <div class="text-secondary opacity-75 extra-small">Integrity Score (Pandas)</div>
+                            <div class="fs-4 fw-bold text-{{ integrity.risk_color }}">{{ integrity.integrity_score }} / 100</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 rounded-3 result-metric-card">
+                            <div class="text-secondary opacity-75 extra-small">Face Presence Ratio</div>
+                            <div class="fs-4 fw-bold text-info">{{ integrity.face_presence_ratio }}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pandas Risk Classification Badge Banner -->
+                <div class="p-3 rounded-3 mb-4 d-inline-flex align-items-center gap-2 border border-{{ integrity.risk_color }}-subtle bg-{{ integrity.risk_color }}-subtle text-{{ integrity.risk_color }}">
+                    <i class="fa-solid fa-shield-check fs-5"></i>
+                    <div class="text-start">
+                        <div class="fw-bold small">{{ integrity.risk_title }} ({{ integrity.risk_label }})</div>
+                        <div class="extra-small opacity-85">{{ integrity.risk_description }}</div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                    <a href="{{ url_for('exam.candidate_dashboard') }}?tab=results" class="btn btn-primary-monitorexam px-4 py-2.5">
+                        <i class="fa-solid fa-square-poll-vertical me-1.5"></i> Back to Result Scorecards
+                    </a>
+                    <a href="{{ url_for('exam.candidate_dashboard') }}?tab=overview" class="btn btn-outline-rose px-4 py-2.5">
+                        <i class="fa-solid fa-gauge me-1.5"></i> Return to Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Proctoring Security & Browser Activity Logs -->
+            <div class="mb-5">
+                <h4 class="fw-bold text-main mb-3 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-rose"></i> OpenCV Face & Security Violation Audit Log
+                </h4>
+
+                <div class="p-4 rounded-4 result-section-card">
+                    {% if proctor_logs %}
+                    <div class="table-responsive">
+                        <table class="table table-custom-monitorexam align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Violation Type</th>
+                                    <th>Proctoring Incident Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in proctor_logs %}
+                                <tr>
+                                    <td class="small opacity-75 text-secondary">{{ log.timestamp }}</td>
+                                    <td>
+                                        {% if log.violation_type == 'TAB_SWITCH' %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1">TAB SWITCH</span>
+                                        {% elif log.violation_type == 'FOCUS_LOST' %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1">FOCUS LOST</span>
+                                        {% elif log.violation_type == 'NO_FACE' %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1">NO FACE DETECTED</span>
+                                        {% elif log.violation_type == 'MULTIPLE_FACES' %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1">MULTIPLE FACES</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary px-2.5 py-1">{{ log.violation_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-main">{{ log.details }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-success">
+                        <i class="fa-solid fa-circle-check fs-2 mb-2"></i>
+                        <p class="mb-0 fw-bold">Clean Proctoring Record: Zero security violations detected during this assessment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Question Review Breakdown Header & Live Search Bar -->
+            <div class="mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3">
+                    <h4 class="fw-bold text-main mb-0 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-file-circle-check text-rose"></i> Question Performance Breakdown
+                    </h4>
+
+                    <!-- Search Input with Clear Button & Match Counter -->
+                    <div class="d-flex align-items-center gap-2 flex-grow-1 flex-md-grow-0" style="min-width: 280px; max-width: 100%;">
+                        <div class="position-relative w-100">
+                            <i class="fa-solid fa-magnifying-glass position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary opacity-75"></i>
+                            <input type="text" id="resultQuestionSearch" oninput="filterResultQuestions()" class="form-control ps-5 pe-5 py-2 rounded-3 text-main" style="background: var(--bg-card); border-color: var(--border-subtle);" placeholder="Search questions & options...">
+                            <button type="button" id="clearResultSearchBtn" onclick="clearResultSearch()" class="btn p-0 border-0 position-absolute end-0 top-50 translate-middle-y me-3 text-secondary opacity-75 d-none" title="Clear Search">
+                                <i class="fa-solid fa-circle-xmark fs-6"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Pills Group & Match Counter -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                    <div class="d-flex align-items-center gap-2 flex-wrap" id="resultFilterPills">
+                        <button type="button" onclick="filterResultCategory('all', this)" class="btn btn-sm btn-outline-rose rounded-pill px-3 active fw-bold">
+                            All Questions <span class="badge bg-rose text-white ms-1">{{ review_list|length }}</span>
+                        </button>
+                        <button type="button" onclick="filterResultCategory('correct', this)" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold">
+                            Correct Only <span class="badge bg-success text-white ms-1">{{ correct_count }}</span>
+                        </button>
+                        <button type="button" onclick="filterResultCategory('incorrect', this)" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold">
+                            Incorrect Only <span class="badge bg-danger text-white ms-1">{{ review_list|length - correct_count }}</span>
+                        </button>
+                    </div>
+
+                    <span class="extra-small fw-bold text-secondary" id="searchMatchCount">
+                        Showing {{ review_list|length }} of {{ review_list|length }} questions
+                    </span>
+                </div>
+
+                <!-- Question Cards Container -->
+                <div class="d-flex flex-column gap-3" id="resultQuestionsList">
+                    {% for item in review_list %}
+                    <div class="p-4 rounded-4 result-section-card result-question-card" 
+                         data-status="{% if item.is_correct %}correct{% else %}incorrect{% endif %}"
+                         data-text="{{ item.question_text | lower }} {{ item.options | join(' ') | lower }}">
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-bold text-rose">Question {{ loop.index }}</span>
+                            {% if item.is_correct %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 small fw-bold">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Correct (+{{ item.marks }} mark)
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 small fw-bold">
+                                    <i class="fa-solid fa-circle-xmark me-1"></i> Incorrect (0 marks)
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <h6 class="fw-bold text-main mb-3" style="line-height: 1.5;">{{ item.question_text }}</h6>
+
+                        <div class="d-flex flex-column gap-2">
+                            {% for opt in item.options %}
+                            <div class="p-2.5 px-3 rounded-3 small d-flex align-items-center justify-content-between 
+                                        {% if loop.index0 == item.correct_option %}
+                                            bg-success-subtle text-success border border-success-subtle fw-bold
+                                        {% elif loop.index0 == item.user_selected and not item.is_correct %}
+                                            bg-danger-subtle text-danger border border-danger-subtle fw-bold
+                                        {% else %}
+                                            text-secondary result-metric-card
+                                        {% endif %}">
+                                <div>
+                                    <span class="me-2 fw-bold">{{ ['A', 'B', 'C', 'D', 'E'][loop.index0] if loop.index0 < 5 else loop.index0 + 1 }}.</span>
+                                    <span>{{ opt }}</span>
+                                </div>
+                                {% if loop.index0 == item.correct_option %}
+                                    <span class="extra-small text-success fw-bold ms-2"><i class="fa-solid fa-check me-1"></i> Correct Option</span>
+                                {% elif loop.index0 == item.user_selected %}
+                                    <span class="extra-small text-danger fw-bold ms-2"><i class="fa-solid fa-xmark me-1"></i> Your Choice</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- No Results Match Card -->
+                    <div id="noResultsMatchCard" class="p-5 rounded-4 text-center result-section-card d-none">
+                        <i class="fa-solid fa-magnifying-glass fs-1 text-secondary opacity-50 mb-3"></i>
+                        <h5 class="fw-bold text-main">No Matching Questions Found</h5>
+                        <p class="text-secondary opacity-75 small mb-0">Try clearing your search query or selecting a different filter pill.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+let currentStatusFilter = 'all';
+
+function filterResultQuestions() {
+    const searchInput = document.getElementById('resultQuestionSearch');
+    if (!searchInput) return;
+
+    const clearBtn = document.getElementById('clearResultSearchBtn');
+    const matchCountEl = document.getElementById('searchMatchCount');
+    
+    const query = searchInput.value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.result-question-card');
+    const totalCount = cards.length;
+    let visibleCount = 0;
+
+    // Toggle Clear Search Button
+    if (clearBtn) {
+        if (query.length > 0) {
+            clearBtn.classList.remove('d-none');
+        } else {
+            clearBtn.classList.add('d-none');
+        }
+    }
+
+    cards.forEach(card => {
+        // Search across full card text content (question text + options + badges)
+        const textContent = (card.textContent || card.innerText || '').toLowerCase();
+        const dataText = (card.getAttribute('data-text') || '').toLowerCase();
+        const status = (card.getAttribute('data-status') || '').toLowerCase();
+
+        const matchesQuery = (query === '' || textContent.includes(query) || dataText.includes(query));
+        const matchesStatus = (currentStatusFilter === 'all' || status === currentStatusFilter);
+
+        if (matchesQuery && matchesStatus) {
+            card.classList.remove('d-none');
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.classList.add('d-none');
+            card.style.display = 'none';
+        }
+    });
+
+    // Update Match Count Badge
+    if (matchCountEl) {
+        matchCountEl.textContent = `Showing ${visibleCount} of ${totalCount} questions`;
+    }
+
+    const noResultsCard = document.getElementById('noResultsMatchCard');
+    if (noResultsCard) {
+        if (visibleCount === 0) {
+            noResultsCard.classList.remove('d-none');
+            noResultsCard.style.display = 'block';
+        } else {
+            noResultsCard.classList.add('d-none');
+            noResultsCard.style.display = 'none';
+        }
+    }
+}
+
+function clearResultSearch() {
+    const searchInput = document.getElementById('resultQuestionSearch');
+    if (searchInput) {
+        searchInput.value = '';
+        filterResultQuestions();
+        searchInput.focus();
+    }
+}
+
+function filterResultCategory(status, btn) {
+    currentStatusFilter = status;
+    
+    // Update active pill styling
+    const pills = document.querySelectorAll('#resultFilterPills button');
+    pills.forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    filterResultQuestions();
+}
+
+// Bind Robust Live Event Listeners on DOM Ready
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('resultQuestionSearch');
+    if (searchInput) {
+        ['input', 'keyup', 'change', 'paste'].forEach(evtType => {
+            searchInput.addEventListener(evtType, filterResultQuestions);
+        });
+    }
+    filterResultQuestions();
+});
+</script>
+{% endblock %}

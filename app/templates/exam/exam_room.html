@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}Live Exam - {{ exam.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/exam.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Hidden Inputs for JS Engine -->
+<input type="hidden" id="submissionId" value="{{ submission.id }}">
+<input type="hidden" id="examDuration" value="{{ exam.duration_minutes }}">
+
+<!-- Exam Room Header Bar -->
+<div class="exam-room-header">
+    <div class="container-fluid px-lg-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <span class="badge badge-rose mb-1">{{ exam.category }}</span>
+                <h4 class="fw-bold text-white mb-0">{{ exam.title }}</h4>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <!-- Violation Tracker Counter -->
+                <div id="violationBadgeBox" class="violation-badge-box">
+                    <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>
+                    <span> Warnings : <strong id="violationCountDisplay" class="text-warning">0</strong> / 5</span>
+                </div>
+
+                <!-- Toggle Fullscreen Mode Button -->
+                <button type="button" id="btnHeaderFullscreen" class="btn btn-warning btn-sm d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-expand"></i>
+                    <span id="headerFullscreenText">Enable Fullscreen</span>
+                </button>
+
+                <!-- Toggle Question Palette Sidebar Button -->
+                <button type="button" id="btnTogglePalette" class="btn btn-rose-outline btn-sm d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-border-all text-rose"></i>
+                    <span id="togglePaletteText">Hide Palette</span>
+                </button>
+
+                <!-- Countdown Timer Badge -->
+                <div class="text-end">
+                    <div class="text-offwhite opacity-75 extra-small">Time Remaining</div>
+                    <div class="timer-badge-box">
+                        <i class="fa-regular fa-clock text-rose"></i>
+                        <span id="timerDisplay">--:--</span>
+                    </div>
+                </div>
+
+                <!-- Submit Exam Top Button -->
+                <button type="button" class="btn btn-primary-monitorexam px-3 py-2" data-bs-toggle="modal" data-bs-target="#submitModal">
+                    Finish & Submit &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Exam Room Dual Grid -->
+<div class="container-fluid px-lg-4 py-4">
+    <form id="examForm" action="{{ url_for('exam.submit_exam', submission_id=submission.id) }}" method="POST">
+        
+        <div class="row g-4">
+            
+            <!-- Left Column: Question Card & Answer Options -->
+            <div id="mainQuestionCol" class="col-lg-8 col-xl-9 transition-all">
+                <div class="exam-card-main">
+                    
+                    <!-- Question Sub-Header -->
+                    <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom" style="border-color: var(--border-subtle) !important;">
+                        <div>
+                            <span class="text-rose fw-bold">Question <span id="qCurrentIndex">1</span> of {{ questions | length }}</span>
+                        </div>
+                        <div class="text-offwhite extra-small">
+                            <i class="fa-solid fa-lock text-success me-1"></i> Secure Mode Active
+                        </div>
+                    </div>
+
+                    <!-- Question Panes Container -->
+                    <div id="questionsContainer">
+                        {% for q in questions %}
+                        {% set saved_ans = saved_answers.get(q.id, {}) %}
+                        {% set sel_option = saved_ans.get('selected_option', -1) %}
+                        {% set is_flagged = saved_ans.get('is_flagged', false) %}
+                        
+                        <div class="question-pane {% if not loop.first %}d-none{% endif %}" 
+                             data-question-id="{{ q.id }}" 
+                             data-index="{{ loop.index0 }}"
+                             data-is-flagged="{{ 'true' if is_flagged else 'false' }}">
+                            
+                            <h5 class="fw-bold text-white mb-4" style="line-height: 1.6; user-select: none;">
+                                {{ q.question_text }}
+                            </h5>
+
+                            <div class="options-group mb-4" style="user-select: none;">
+                                {% for opt in q.options %}
+                                <label class="option-label-card {% if sel_option == loop.index0 %}selected-active{% endif %}">
+                                    <input type="radio" 
+                                           name="question_{{ q.id }}" 
+                                           value="{{ loop.index0 }}"
+                                           {% if sel_option == loop.index0 %}checked{% endif %}>
+                                    <span class="option-custom-radio">
+                                        {{ ['A', 'B', 'C', 'D', 'E'][loop.index0] if loop.index0 < 5 else loop.index0 + 1 }}
+                                    </span>
+                                    <span class="text-white font-medium fs-6">{{ opt }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Bottom Controls Footer -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-3 border-top" style="border-color: var(--border-subtle) !important;">
+                        <div class="d-flex gap-2">
+                            <button type="button" id="btnClearChoice" class="btn btn-rose-outline btn-sm">
+                                <i class="fa-solid fa-rotate-left me-1"></i> Clear Selection
+                            </button>
+                            <button type="button" id="btnMarkReview" class="btn btn-warning btn-sm fw-bold">
+                                <i class="fa-solid fa-bookmark me-1"></i> <span id="markReviewText">Mark for Review</span>
+                            </button>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="button" id="btnPrev" class="btn btn-rose-outline" disabled>
+                                &larr; Previous
+                            </button>
+                            <button type="button" id="btnNext" class="btn btn-primary-monitorexam">
+                                Next Question &rarr;
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Column: Question Navigator Palette -->
+            <div id="paletteCol" class="col-lg-4 col-xl-3 transition-all">
+                <div class="palette-card-box">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold text-white mb-0">
+                            <i class="fa-solid fa-grid me-2 text-rose"></i> Question Palette
+                        </h6>
+                    </div>
+
+                    <div class="question-palette-grid mb-4">
+                        {% for q in questions %}
+                        {% set saved_ans = saved_answers.get(q.id, {}) %}
+                        {% set sel_option = saved_ans.get('selected_option', -1) %}
+                        {% set is_flagged = saved_ans.get('is_flagged', false) %}
+                        <button type="button" 
+                                class="palette-btn {% if sel_option != -1 and is_flagged %}answered-flagged{% elif is_flagged %}flagged{% elif sel_option != -1 %}answered{% endif %} {% if loop.first %}active-current{% endif %}" 
+                                data-index="{{ loop.index0 }}">
+                            {{ loop.index }}
+                        </button>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Palette Legend -->
+                    <div class="border-top pt-3" style="border-color: var(--border-subtle) !important;">
+                        <div class="d-flex align-items-center mb-2 small text-offwhite">
+                            <span class="legend-indicator" style="background: #28a745;"></span> Answered
+                        </div>
+                        <div class="d-flex align-items-center mb-2 small text-offwhite">
+                            <span class="legend-indicator" style="background: #969b69;"></span> Marked for Review
+                        </div>
+                        <div class="d-flex align-items-center mb-2 small text-offwhite">
+                            <span class="legend-indicator" style="background: #8b5cf6;"></span> Answered & Marked
+                        </div>
+                        <div class="d-flex align-items-center small text-offwhite">
+                            <span class="legend-indicator" style="background: #0F0F11; border: 1px solid var(--border-subtle);"></span> Unattempted
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<!-- Floating Live WebCam AI Proctoring Feed Widget -->
+<div id="floatingProctoringWidget" class="floating-webcam-box">
+    <div class="webcam-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <span id="recDot" class="rec-dot"></span>
+            <span class="fw-bold text-white extra-small">LIVE PROCTORING</span>
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <button type="button" id="btnToggleCamera" class="btn btn-dark btn-sm py-0 px-2 text-white extra-small border-secondary d-flex align-items-center gap-1" title="Start / Stop Camera">
+                <i id="toggleCamIcon" class="fa-solid fa-video text-success"></i>
+                <span id="toggleCamText">Pause</span>
+            </button>
+            <button type="button" id="btnMinimizeWebcam" class="btn-clean-icon text-white p-1">
+                <i id="minimizeWebcamIcon" class="fa-solid fa-chevron-down extra-small"></i>
+            </button>
+        </div>
+    </div>
+    <div id="webcamBody" class="webcam-body">
+        <video id="proctoringVideo" autoplay playsinline muted></video>
+        <div class="webcam-overlay-status">
+            <i class="fa-solid fa-shield-halved text-success me-1"></i> Active Feed (100% Integrity)
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Security Enforcer Modal -->
+<div class="modal fade" id="fullscreenWarningModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: #140E13; border: 2px solid #ffc107; color: #FFFFFF;">
+            <div class="modal-header border-0 text-warning pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Fullscreen Mode Required
+                </h5>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="avatar-round-preview mx-auto mb-3 text-warning border-warning d-flex align-items-center justify-content-center" style="width: 72px; height: 72px; background: rgba(255, 193, 7, 0.15); border: 2px solid #ffc107;">
+                    <i class="fa-solid fa-expand fs-1 text-warning"></i>
+                </div>
+                <h6 class="fw-bold text-white mb-2">Proctoring Security Enforcement</h6>
+                <p class="text-offwhite opacity-75 small mb-0">This examination must be taken in Fullscreen Mode. Please click the button below to enable fullscreen mode and continue your assessment.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pt-0">
+                <button type="button" id="btnEnableFullscreenModal" class="btn btn-warning px-4 py-2 fw-bold">
+                    <i class="fa-solid fa-expand me-1"></i> Enable Fullscreen Mode Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Security Violation Alert Modal -->
+<div class="modal fade" id="violationModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: #140E13; border: 2px solid #dc3545; color: #FFFFFF;">
+            <div class="modal-header border-0 text-danger pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Security Violation Alert
+                </h5>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="avatar-round-preview mx-auto mb-3 text-danger border-danger d-flex align-items-center justify-content-center" style="width: 72px; height: 72px; background: rgba(220, 53, 69, 0.15); border: 2px solid #dc3545;">
+                    <i class="fa-solid fa-shield-xmark fs-1 text-danger"></i>
+                </div>
+                <h6 class="fw-bold text-white mb-2" id="violationModalTitle">Tab Switch / Window Focus Lost</h6>
+                <p class="text-offwhite opacity-75 small mb-3" id="violationModalDesc">Navigating away from the active exam window is strictly prohibited. This incident has been logged as a proctoring violation.</p>
+                <div class="p-2 rounded bg-dark border border-danger d-inline-block px-4 mb-2">
+                    <span class="text-white fw-bold">Violation Strike: <span id="modalViolationCount" class="text-danger fs-5 fw-extrabold">1</span> / 5</span>
+                </div>
+                <div class="text-danger extra-small fw-bold">Warning: Reaching 5 violations will automatically terminate your exam.</div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pt-0">
+                <button type="button" id="btnAcknowledgeViolation" class="btn btn-danger px-4 py-2 fw-bold" data-bs-dismiss="modal">
+                    I Understand & Resume Exam &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: #140E13; border: 1px solid var(--border-subtle); color: #FFFFFF;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-white">
+                    <i class="fa-solid fa-paper-plane text-rose me-2"></i> Submit Assessment?
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="text-offwhite opacity-75 mb-4">Are you sure you want to complete and submit your assessment? Once submitted, you cannot modify your answers.</p>
+                
+                <div class="row g-2 text-center">
+                    <div class="col-3">
+                        <div class="p-2 rounded bg-dark border border-secondary">
+                            <div class="fs-5 fw-bold text-white" id="summaryTotal">0</div>
+                            <div class="extra-small text-offwhite opacity-75">Total</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 rounded bg-dark border border-success">
+                            <div class="fs-5 fw-bold text-success" id="summaryAnswered">0</div>
+                            <div class="extra-small text-offwhite opacity-75">Answered</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 rounded bg-dark border border-secondary">
+                            <div class="fs-5 fw-bold text-danger" id="summaryUnanswered">0</div>
+                            <div class="extra-small text-offwhite opacity-75">Unanswered</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 rounded bg-dark border border-warning">
+                            <div class="fs-5 fw-bold text-warning" id="summaryFlagged">0</div>
+                            <div class="extra-small text-offwhite opacity-75">Flagged</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-rose-outline" data-bs-dismiss="modal">Return to Exam</button>
+                <button type="button" class="btn btn-primary-monitorexam" onclick="document.getElementById('examForm').submit();">
+                    Confirm & Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/exam_engine.js') }}"></script>
+<script>
+    // Palette Toggle Handler
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnTogglePalette = document.getElementById('btnTogglePalette');
+        const mainQuestionCol = document.getElementById('mainQuestionCol');
+        const paletteCol = document.getElementById('paletteCol');
+        const togglePaletteText = document.getElementById('togglePaletteText');
+
+        if (btnTogglePalette && mainQuestionCol && paletteCol) {
+            btnTogglePalette.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (paletteCol.classList.contains('d-none')) {
+                    paletteCol.classList.remove('d-none');
+                    mainQuestionCol.className = 'col-lg-8 col-xl-9 transition-all';
+                    if (togglePaletteText) togglePaletteText.innerText = 'Hide Palette';
+                } else {
+                    paletteCol.classList.add('d-none');
+                    mainQuestionCol.className = 'col-12 transition-all';
+                    if (togglePaletteText) togglePaletteText.innerText = 'Show Palette';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Student Details & Profile - WatchDesk{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Navigation Back Link -->
+    <div class="mb-3">
+        <a href="{{ url_for('exam.candidate_dashboard') }}" class="text-rose text-decoration-none small fw-semibold">
+            &larr; Back to Candidate Dashboard
+        </a>
+    </div>
+
+    <!-- Student Details Header Card -->
+    <div class="dashboard-header-card mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-round-preview" style="width: 72px; height: 72px; border: 3px solid var(--accent-rose);">
+                        {% if user.photo_path %}
+                            <img src="{{ url_for('static', filename=user.photo_path) }}" alt="Candidate Photo">
+                        {% else %}
+                            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-dark text-rose fs-3 fw-bold">
+                                {{ user.full_name[0] | upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h2 class="fw-bold text-white mb-1">{{ user.full_name }}</h2>
+                        <p class="text-offwhite opacity-75 mb-0 small">
+                            <span class="badge badge-rose me-2">{{ user.registration_no or 'WD-2026-REGISTERED' }}</span>
+                            {{ user.email }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <button type="button" class="btn btn-primary-monitorexam px-4 py-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <i class="fa-regular fa-pen-to-square me-1"></i> Edit Student Details
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Details 3-Section Cards / Tabs -->
+    <div class="row g-4 mb-4">
+
+        <!-- 1. Personal Details Card -->
+        <div class="col-lg-4">
+            <div class="card student-detail-card h-100 p-4 border-0 rounded-4">
+                <div class="d-flex align-items-center gap-3 mb-4 pb-2 border-bottom border-secondary">
+                    <div class="stat-icon-wrapper">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-white mb-0">Personal Details</h5>
+                        <span class="text-offwhite opacity-75 extra-small">Candidate Identity</span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Full Name</div>
+                        <div class="fw-bold text-white">{{ user.full_name }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Email Address</div>
+                        <div class="fw-bold text-white">{{ user.email }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Phone Number</div>
+                        <div class="fw-bold text-white">{{ user.phone or 'Not Provided' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Date of Birth</div>
+                        <div class="fw-bold text-white">{{ user.dob or 'Not Provided' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Gender</div>
+                        <div class="fw-bold text-white">{{ user.gender or 'Not Specified' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Academic Details Card -->
+        <div class="col-lg-4">
+            <div class="card student-detail-card h-100 p-4 border-0 rounded-4">
+                <div class="d-flex align-items-center gap-3 mb-4 pb-2 border-bottom border-secondary">
+                    <div class="stat-icon-wrapper text-info" style="background: rgba(13, 202, 240, 0.15);">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-white mb-0">Academic Details</h5>
+                        <span class="text-offwhite opacity-75 extra-small">Institutional Record</span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Student / Roll ID</div>
+                        <div class="fw-bold text-white">{{ user.student_id or 'STU-2026-001' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Institution / College</div>
+                        <div class="fw-bold text-white">{{ user.institution or 'Department of Computer Engineering' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Department / Branch</div>
+                        <div class="fw-bold text-white">{{ user.department or 'Computer Science & AI' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Semester / Year</div>
+                        <div class="fw-bold text-white">{{ user.semester or 'Semester VI (3rd Year)' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">CGPA / Grade Percentage</div>
+                        <div class="fw-bold text-success">{{ user.cgpa or '8.75 / 10.0' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Registration Details Card -->
+        <div class="col-lg-4">
+            <div class="card student-detail-card h-100 p-4 border-0 rounded-4">
+                <div class="d-flex align-items-center gap-3 mb-4 pb-2 border-bottom border-secondary">
+                    <div class="stat-icon-wrapper text-success" style="background: rgba(40, 167, 69, 0.15);">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-white mb-0">Registration Details</h5>
+                        <span class="text-offwhite opacity-75 extra-small">System Verification</span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Registration Number</div>
+                        <div class="fw-bold text-rose fs-6">{{ user.registration_no or 'WD-2026-REGISTERED' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Registration Date</div>
+                        <div class="fw-bold text-white">{{ user.created_at }}</div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small">Proctoring Status</div>
+                        <div>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-bold">
+                                <i class="fa-solid fa-shield-check me-1"></i> {{ user.status or 'Verified' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-offwhite opacity-75 extra-small mb-2">Webcam Identity Snapshot</div>
+                        <div class="camera-box-clean" style="max-width: 160px; aspect-ratio: 4/3;">
+                            {% if user.photo_path %}
+                                <img src="{{ url_for('static', filename=user.photo_path) }}" alt="Candidate Verified Photo" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-dark text-offwhite small">No Photo Captured</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Edit Student Details Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0">
+            <form action="{{ url_for('auth.update_profile') }}" method="POST">
+                <div class="modal-header border-bottom" style="border-color: var(--border-subtle) !important;">
+                    <h5 class="modal-title fw-bold text-white">
+                        <i class="fa-solid fa-user-pen text-rose me-2"></i> Edit Student Profile Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-4">
+                    
+                    <h6 class="fw-bold text-rose mb-3 border-bottom pb-1"><i class="fa-solid fa-user me-1"></i> Personal Details</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Full Name</label>
+                            <input type="text" class="form-control form-control-monitorexam" name="full_name" value="{{ user.full_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Phone Number</label>
+                            <input type="text" class="form-control form-control-monitorexam" name="phone" value="{{ user.phone or '' }}" placeholder="+1 (555) 000-0000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Date of Birth</label>
+                            <input type="date" class="form-control form-control-monitorexam" name="dob" value="{{ user.dob or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Gender</label>
+                            <select class="form-control form-control-monitorexam" name="gender">
+                                <option value="Male" {% if user.gender == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if user.gender == 'Female' %}selected{% endif %}>Female</option>
+                                <option value="Other" {% if user.gender == 'Other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-info mb-3 border-bottom pb-1"><i class="fa-solid fa-graduation-cap me-1"></i> Academic Details</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Student / Roll ID</label>
+                            <input type="text" class="form-control form-control-monitorexam" name="student_id" value="{{ user.student_id or '' }}" placeholder="e.g. STU-2026-104">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Institution / College</label>
+                            <input type="text" class="form-control form-control-monitorexam" name="institution" value="{{ user.institution or '' }}" placeholder="e.g. Institute of Technology">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Department / Branch</label>
+                            <input type="text" class="form-control form-control-monitorexam" name="department" value="{{ user.department or '' }}" placeholder="e.g. Computer Engineering">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-custom">Semester / Year</label>
+                            <input type="text" class="form-control form-control-monitorexam" name="semester" value="{{ user.semester or '' }}" placeholder="e.g. Semester 6">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-custom">CGPA / Grade</label>
+                            <input type="text" class="form-control form-control-monitorexam" name="cgpa" value="{{ user.cgpa or '' }}" placeholder="e.g. 8.75">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer border-top" style="border-color: var(--border-subtle) !important;">
+                    <button type="button" class="btn btn-rose-outline" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-monitorexam">Save Details &rarr;</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

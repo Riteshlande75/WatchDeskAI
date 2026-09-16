@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Official Assessment Certificate - WatchDesk{% endblock %}
+
+{% block extra_css %}
+<style>
+  @media print {
+    nav, footer, .no-print {
+      display: none !important;
+    }
+    body {
+      background: #FFFFFF !important;
+      color: #000000 !important;
+    }
+    .certificate-container {
+      box-shadow: none !important;
+      border: 6px double #B8860B !important;
+      margin: 0 !important;
+      width: 100% !important;
+    }
+  }
+
+  .certificate-wrapper {
+    max-width: 900px;
+    margin: 2rem auto;
+  }
+
+  .certificate-card {
+    background: #FFFFFF;
+    color: #1E293B;
+    border: 10px double #D4AF37;
+    border-radius: 1rem;
+    padding: 3.5rem 3rem;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  }
+
+  .certificate-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14rem;
+    color: rgba(212, 175, 55, 0.05);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .gold-seal {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #F39C12 0%, #D4AF37 50%, #B8860B 100%);
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+    border: 3px solid #FFF8DC;
+  }
+
+  [data-theme="light"] .certificate-card {
+    background: #FFFFFF !important;
+    color: #1E293B !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Navigation & Action Buttons -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <a href="{{ url_for('exam.dashboard') }}" class="text-rose text-decoration-none small fw-semibold">
+            &larr; Back to Dashboard
+        </a>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-primary-monitorexam px-4 py-2 fw-bold shadow">
+                <i class="fa-solid fa-print me-2"></i> Print / Save as PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Official Certificate Card -->
+    <div class="certificate-wrapper">
+        <div class="certificate-card certificate-container position-relative overflow-hidden">
+            <i class="fa-solid fa-award certificate-watermark"></i>
+
+            <div class="position-relative z-1">
+                <!-- Header Logo & Subtitle -->
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center gap-2 mb-2">
+                        <div class="brand-icon-box" style="width: 45px; height: 45px; font-size: 1.4rem;">
+                            <i class="fa-solid fa-desktop text-rose"></i>
+                        </div>
+                        <span class="fs-2 fw-extrabold text-dark tracking-wide">WatchDesk</span>
+                    </div>
+                    <div class="text-uppercase tracking-widest fw-bold text-muted extra-small">Official AI Proctoring Certification Authority</div>
+                </div>
+
+                <!-- Certificate Title -->
+                <div class="text-center my-4">
+                    <h1 class="display-5 fw-bold text-dark font-serif" style="font-family: 'Georgia', serif; color: #1E293B !important;">
+                        Certificate of Achievement
+                    </h1>
+                    <p class="text-secondary small">THIS IS PROUDLY PRESENTED TO</p>
+                </div>
+
+                <!-- Candidate Name -->
+                <div class="text-center my-3 pb-2 border-bottom border-warning" style="border-width: 2px !important; border-color: #D4AF37 !important;">
+                    <h2 class="display-6 fw-extrabold text-dark mb-1" style="color: #0F172A !important;">
+                        {{ user.full_name if user else session.get('full_name', 'Candidate') }}
+                    </h2>
+                    <span class="badge bg-light text-dark border px-3 py-1 extra-small fw-semibold">
+                        Registration No: {{ user.registration_no if user and user.get('registration_no') else 'WD-2026-VERIFIED' }}
+                    </span>
+                </div>
+
+                <!-- Achievement Description -->
+                <div class="text-center my-4 px-md-4">
+                    <p class="fs-6 text-secondary mb-2">
+                        For successfully completing and demonstrating mastery in the official proctored assessment:
+                    </p>
+                    <h3 class="fw-bold text-dark mb-3" style="color: #6C4A60 !important;">
+                        {{ exam.title if exam else 'Assessment Examination' }}
+                    </h3>
+                    <p class="small text-muted mb-0">
+                        Category: <strong>{{ exam.category if exam else 'General' }}</strong> &nbsp;|&nbsp; 
+                        Pass Threshold: <strong>{{ exam.pass_percentage if exam else 60 }}%</strong>
+                    </p>
+                </div>
+
+                <!-- Score & Integrity Metrics Grid -->
+                <div class="row align-items-center my-4 py-3 bg-light rounded-3 border">
+                    <div class="col-4 text-center border-end">
+                        <div class="extra-small text-secondary text-uppercase fw-semibold">Score Achieved</div>
+                        <div class="fs-3 fw-extrabold text-success">{{ submission.score }} / {{ submission.total_marks }}</div>
+                        <div class="extra-small fw-bold text-success">({{ submission.percentage }}%)</div>
+                    </div>
+                    <div class="col-4 text-center border-end">
+                        <div class="extra-small text-secondary text-uppercase fw-semibold">Proctoring Audit</div>
+                        <div class="fs-3 fw-extrabold text-primary">{{ integrity.integrity_score | default(100.0) }}%</div>
+                        <div class="extra-small text-success fw-bold"><i class="fa-solid fa-shield-check me-1"></i> VERIFIED CLEAN</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="extra-small text-secondary text-uppercase fw-semibold">Date Issued</div>
+                        <div class="fs-6 fw-bold text-dark mt-1">{{ (submission.submitted_at or submission.started_at or '')[:10] }}</div>
+                        <div class="extra-small text-muted">ID: #{{ submission.id }}</div>
+                    </div>
+                </div>
+
+                <!-- Footer Gold Seal & Verification Signatures -->
+                <div class="row align-items-center mt-5 pt-3">
+                    <div class="col-4 text-center">
+                        <div class="gold-seal mx-auto mb-1">
+                            <i class="fa-solid fa-shield-halved fs-3"></i>
+                            <span class="extra-small fw-bold" style="font-size: 0.6rem;">PROCTOR</span>
+                        </div>
+                        <div class="extra-small fw-bold text-dark mt-1">AI Verified Seal</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="badge bg-success-subtle text-success border border-success px-3 py-2 fw-bold">
+                            <i class="fa-solid fa-user-check me-1"></i> AI PROCTOR AUDIT PASSED
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="border-bottom border-dark pb-1 mb-1 fw-bold text-dark font-serif" style="font-family: 'Georgia', serif;">
+                            WatchDesk Certification
+                        </div>
+                        <div class="extra-small text-muted">Automated Integrity System</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

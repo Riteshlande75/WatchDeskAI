@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Registered Students Directory - WatchDesk{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Navigation Back Link -->
+    <div class="mb-3">
+        <a href="{{ url_for('exam.candidate_dashboard') if session.get('user_id') else url_for('auth.login') }}" class="text-rose text-decoration-none small fw-semibold">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Header Banner -->
+    <div class="dashboard-header-card mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold text-white mb-1">
+                    <i class="fa-solid fa-users text-rose me-2"></i> Registered Students Directory
+                </h2>
+                <p class="text-offwhite opacity-75 mb-0 small">Overview of all candidate accounts, registration numbers, login credentials, and verification status.</p>
+            </div>
+            <div>
+                <span class="badge badge-rose px-3 py-2 fs-6">
+                    Total Students: {{ students | length }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Accounts Table -->
+    <div class="table-card-wrapper table-responsive rounded-3">
+        <table class="table table-custom-monitorexam mb-0">
+            <thead>
+                <tr>
+                    <th>Photo</th>
+                    <th>Full Name</th>
+                    <th>Login Email</th>
+                    <th>Registration No</th>
+                    <th>Student / Roll ID</th>
+                    <th>Institution & Dept</th>
+                    <th>Joined At</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for st in students %}
+                <tr>
+                    <td>
+                        <div class="avatar-round-preview" style="width: 44px; height: 44px; border: 2px solid var(--accent-rose);">
+                            {% if st.photo_path %}
+                                <img src="{{ url_for('static', filename=st.photo_path) }}" alt="Student Snapshot">
+                            {% else %}
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-dark text-rose fw-bold">
+                                    {{ st.full_name[0] | upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="fw-bold text-white fs-6">{{ st.full_name }}</td>
+                    <td>
+                        <span class="text-info fw-semibold">
+                            <i class="fa-solid fa-envelope me-1"></i> {{ st.email }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-rose">{{ st.registration_no or 'WD-2026-REGISTERED' }}</span>
+                    </td>
+                    <td class="fw-semibold text-white">{{ st.student_id or 'N/A' }}</td>
+                    <td>
+                        <div class="small fw-bold text-white">{{ st.institution or 'N/A' }}</div>
+                        <div class="extra-small text-offwhite opacity-75">{{ st.department or 'N/A' }}</div>
+                    </td>
+                    <td class="small opacity-75 text-offwhite">{{ st.created_at }}</td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-bold">
+                            <i class="fa-solid fa-shield-check me-1"></i> {{ st.status or 'Verified' }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center py-5 text-offwhite opacity-75">
+                        No registered students found in database.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

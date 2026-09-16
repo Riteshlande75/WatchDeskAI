@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - WatchDesk{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-auto">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="auth-split-card">
+                <div class="row g-0">
+
+                    <!-- Left Hero Banner Side (#0F0F11) -->
+                    <div class="col-md-5 auth-left-banner">
+                        <h2 class="mb-3">Welcome Back</h2>
+                        <p class="mb-4">Proctor your online exams with <span class="fst-italic text-rose">WatchDesk</span>. Secure, reliable, and easy to use.</p>
+
+                        <div class="feature-item">
+                            <div class="feature-icon-circle"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div>
+                                <div class="feature-title">Secure Authentication</div>
+                                <div class="feature-desc">Your data is always protected</div>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon-circle"><i class="fa-solid fa-camera"></i></div>
+                            <div>
+                                <div class="feature-title">AI Proctoring</div>
+                                <div class="feature-desc">Advanced monitoring technology</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Form Side (#140E13) -->
+                    <div class="col-md-7 auth-right-form">
+
+                        <h3 class="form-title">Sign In</h3>
+                        <p class="form-subtitle">Enter your credentials to access your candidate dashboard</p>
+
+                        <form action="{{ url_for('auth.login') }}" method="POST">
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label-custom">Email</label>
+                                <div class="input-group input-group-monitorexam">
+                                    <span class="input-group-text input-icon-text"><i class="fa-regular fa-user"></i></span>
+                                    <input type="email" class="form-control form-control-monitorexam" id="email" name="email" placeholder="Enter your email address" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label-custom">Password</label>
+                                <div class="input-group input-group-monitorexam">
+                                    <span class="input-group-text input-icon-text"><i class="fa-solid fa-lock"></i></span>
+                                    <input type="password" class="form-control form-control-monitorexam" id="password" name="password" placeholder="Enter your password" required>
+                                    <button class="btn btn-link text-rose pe-3 border-0 text-decoration-none" type="button" onclick="togglePassword('password', this)">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="form-check d-flex align-items-center gap-2 m-0">
+                                    <input class="form-check-input mt-0" type="checkbox" id="remember" name="remember" checked>
+                                    <label class="form-check-label small fw-semibold" for="remember">Remember me</label>
+                                </div>
+                                <a href="#" class="link-rose small fw-semibold">Forgot password?</a>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary-monitorexam w-100 mb-4">
+                                <i class="fa-solid fa-arrow-right-to-bracket me-2"></i> Sign In &rarr;
+                            </button>
+
+                            <div class="text-center pt-2 border-top" style="border-color: var(--border-subtle) !important;">
+                                <span class="text-offwhite opacity-75 small">Don't have an account? </span>
+                                <a href="{{ url_for('auth.register') }}" class="link-rose small">Register</a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePassword(id, btn) {
+        const input = document.getElementById(id);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fa-regular fa-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'fa-regular fa-eye';
+        }
+    }
+</script>
+{% endblock %}

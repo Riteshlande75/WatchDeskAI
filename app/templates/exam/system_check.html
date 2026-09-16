@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}System Permissions Setup - {{ exam.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/system_check.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 my-auto">
+    <div class="row justify-content-center">
+        <div class="col-xl-11">
+
+            <!-- Top Navigation Back Link -->
+            <div class="mb-3">
+                <a href="{{ url_for('exam.candidate_dashboard') }}" class="text-rose text-decoration-none small fw-semibold">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Back to Candidate Dashboard
+                </a>
+            </div>
+
+            <!-- System Permissions Setup Main Container -->
+            <div class="system-setup-card p-4 p-md-5">
+                
+                <!-- Setup Header -->
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom flex-wrap gap-3" style="border-color: var(--border-subtle) !important;">
+                    <div>
+                        <h3 class="fw-bold text-main mb-1">System Permissions Setup</h3>
+                        <p class="text-secondary small mb-0">Activates checks that maintain the integrity of your test for <strong>{{ exam.title }}</strong></p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-main fw-bold fs-5">
+                        <i class="fa-regular fa-lightbulb text-warning"></i>
+                        <span>Important Instructions</span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Left Column: System Checks Checklist -->
+                    <div class="col-lg-6">
+                        <div class="d-flex flex-column gap-3">
+
+                            <!-- Check 1: Mobile Device Check -->
+                            <div class="system-check-item card-check-passed">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="check-icon-circle icon-passed">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold text-main mb-1">Mobile Device Check</h5>
+                                        <p class="text-secondary extra-small mb-0">Verifies if the assessment is being attempted on a mobile device or a desktop.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Check 2: Camera Access -->
+                            <div id="cardCameraCheck" class="system-check-item card-check-pending">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div id="iconCamera" class="check-icon-circle icon-pending">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h5 class="fw-bold text-main mb-1">Camera Access</h5>
+                                            <span id="cameraStatusBadge" class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 extra-small">Checking...</span>
+                                        </div>
+                                        <p class="text-secondary extra-small mb-0">Required for face verification and detection during the assessment.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Check 3: Screen & Fullscreen Access -->
+                            <div id="cardScreenCheck" class="system-check-item card-check-active">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div id="iconScreen" class="check-icon-circle icon-active">
+                                        <i class="fa-solid fa-info"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="fw-bold text-main mb-1">Screen & Fullscreen Access</h5>
+                                        <p class="text-secondary extra-small mb-2">Need this to access and track your screen during the session for proctoring.</p>
+
+                                        <p id="screenWarningText" class="text-danger small fw-semibold mb-2">Please share your Entire screen and enable Fullscreen mode to proceed.</p>
+                                        <p class="text-secondary extra-small mb-3">Fullscreen mode will be activated automatically to maintain security. Please keep fullscreen active throughout the exam.</p>
+
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <button id="btnToggleFullscreen" type="button" class="btn btn-dark-custom rounded-pill px-4 py-2 btn-sm d-inline-flex align-items-center gap-2">
+                                                <i class="fa-solid fa-expand"></i>
+                                                <span id="btnFullscreenText">Enter Fullscreen Mode</span>
+                                            </button>
+                                            <button id="btnRefreshScreen" type="button" class="btn btn-outline-secondary rounded-pill px-3 py-2 btn-sm d-inline-flex align-items-center gap-2">
+                                                <i class="fa-solid fa-rotate-right"></i> Check Status
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Fullscreen & WatchDesk Instructions & Floating Webcam Preview -->
+                    <div class="col-lg-6">
+                        <div class="instructions-panel p-4 rounded-4 position-relative">
+                            
+                            <!-- Floating Live Webcam Feed Overlay -->
+                            <div class="floating-webcam-card">
+                                <div class="video-container">
+                                    <video id="webcamVideo" autoplay playsinline muted></video>
+                                    <div class="video-live-badge">
+                                        <span class="pulse-dot"></span> LIVE PREVIEW
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2 text-warning mb-3">
+                                <i class="fa-solid fa-shield-halved fs-5"></i>
+                                <h6 class="fw-bold text-main mb-0">Fullscreen & Proctoring Instructions</h6>
+                            </div>
+
+                            <ul class="instruction-list text-secondary small pe-lg-5 mb-4">
+                                <li class="mb-2">
+                                    <strong>Fullscreen & Screen Access:</strong> Click <em>"Enter Fullscreen Mode"</em> to authorize full screen security. Fullscreen mode will be activated automatically to maintain security. Please keep fullscreen active throughout the exam.
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Webcam & Face Monitoring:</strong> Keep your face centered in the camera feed. Do not cover the lens or allow secondary persons into the room.
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Tab & App Switch Restrictions:</strong> Switching browser tabs or exiting fullscreen mode will log security violations.
+                                </li>
+                                <li class="mb-2 text-danger fw-semibold">
+                                    <strong>5-Violation Auto-Submit Rule:</strong> Accumulating 5 security violations will automatically terminate and submit your exam.
+                                <li class="mb-2">
+                                    <strong>Background Applications:</strong> Ensure any screen-sharing/casting apps (e.g., Teams, Zoom, Discord, AnyDesk) are closed before proceeding.
+                                </li>
+                            </ul>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Footer Action Area -->
+                <form action="{{ url_for('exam.start_exam', exam_id=exam.id) }}" method="POST">
+                    <div class="d-flex justify-content-end align-items-center pt-4 mt-4 border-top" style="border-color: var(--border-subtle) !important;">
+                        <button id="btnStartExam" type="submit" class="btn btn-action-proceed rounded-pill px-5 py-2.5 fw-semibold" disabled>
+                            I understand, proceed &rarr;
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/system_check.js') }}"></script>
+{% endblock %}

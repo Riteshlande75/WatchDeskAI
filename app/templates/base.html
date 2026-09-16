@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WatchDesk - Exam Monitoring{% endblock %}</title>
+    <!-- Bootstrap 5 & FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        // Apply saved theme mode (system, light, dark) immediately to prevent screen flash
+        (function() {
+            function getSystemTheme() {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            const mode = localStorage.getItem('watchdesk_theme_mode') || 'system';
+            const effectiveTheme = mode === 'system' ? getSystemTheme() : mode;
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
+        })();
+    </script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Header Navbar with 3-Mode Theme Selector (System, Light, Dark) -->
+    <nav class="navbar navbar-expand-lg navbar-monitorexam py-2.5 sticky-top" style="z-index: 1050; border-bottom: 1px solid var(--border-subtle);">
+        <div class="container-fluid px-lg-4">
+            <!-- Brand Logo & Mobile Slide Bar Trigger -->
+            <div class="d-flex align-items-center gap-2">
+                {% if session.get('user_id') %}
+                <button class="btn btn-sm btn-rose-outline d-lg-none py-1 px-2.5 d-inline-flex align-items-center gap-1.5" type="button" onclick="toggleMobileSidebar()" title="Toggle Slide Bar">
+                    <i class="fa-solid fa-bars-staggered text-rose"></i> <span class="extra-small fw-semibold">Slide Bar</span>
+                </button>
+                {% endif %}
+                <a class="navbar-brand d-flex align-items-center gap-2 mb-0" href="{{ url_for('exam.candidate_dashboard') if session.get('user_id') else url_for('auth.login') }}">
+                    <div class="brand-icon-box">
+                        <i class="fa-solid fa-desktop"></i>
+                    </div>
+                    <div>
+                        <span class="brand-logo-text">WatchDesk</span>
+                        <span class="brand-subtext">exam monitoring</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Mobile Navbar Toggle Button -->
+            <div class="d-flex align-items-center gap-2 d-lg-none ms-auto me-2">
+                <button class="navbar-toggler border-0 text-white p-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="fa-solid fa-bars fs-4"></i>
+                </button>
+            </div>
+
+            <!-- Collapsible Navbar Content -->
+            <div class="collapse navbar-collapse mt-3 mt-lg-0" id="navbarContent">
+                <div class="d-flex align-items-center gap-3 ms-auto flex-wrap">
+                    
+                    <!-- 3-Mode Theme Toggle Dropdown (System, Light, Dark) -->
+                    <div class="dropdown">
+                        <button class="theme-toggle-btn dropdown-toggle" type="button" id="themeDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i id="currentThemeIcon" class="fa-solid fa-desktop text-info"></i>
+                            <span id="currentThemeText">System</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-2" aria-labelledby="themeDropdownBtn" style="background-color: #140E13; border: 1px solid var(--border-subtle); min-width: 160px;">
+                            <li>
+                                <button type="button" class="dropdown-item theme-option-btn text-white d-flex align-items-center justify-content-between rounded py-2" data-theme-mode="system">
+                                    <span><i class="fa-solid fa-desktop me-2 text-info"></i> System</span>
+                                    <i class="fa-solid fa-check text-rose theme-check-icon d-none"></i>
+                                </button>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item theme-option-btn text-white d-flex align-items-center justify-content-between rounded py-2" data-theme-mode="light">
+                                    <span><i class="fa-solid fa-sun me-2 text-warning"></i> Light</span>
+                                    <i class="fa-solid fa-check text-rose theme-check-icon d-none"></i>
+                                </button>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item theme-option-btn text-white d-flex align-items-center justify-content-between rounded py-2" data-theme-mode="dark">
+                                    <span><i class="fa-solid fa-moon me-2 text-rose"></i> Dark</span>
+                                    <i class="fa-solid fa-check text-rose theme-check-icon d-none"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {% if session.get('user_id') %}
+                    <!-- User Profile Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn border-0 text-white d-flex align-items-center gap-2 p-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="avatar-round-preview me-1" style="width: 38px; height: 38px; border: 1.5px solid var(--accent-rose);">
+                                {% if session.get('photo_path') %}
+                                    <img src="{{ url_for('static', filename=session.get('photo_path')) }}" alt="Candidate Photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="w-100 h-100 align-items-center justify-content-center bg-dark text-rose fw-bold small" style="display: none;">
+                                        {{ (session.get('full_name') or 'U')[0] | upper }}
+                                    </div>
+                                {% else %}
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-dark text-rose fw-bold small">
+                                        {{ (session.get('full_name') or 'U')[0] | upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <span class="fw-semibold small text-white me-1">{{ session.get('full_name') or 'Candidate' }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-2" style="background-color: #140E13; border: 1px solid var(--border-subtle);">
+                            <li class="px-3 py-2 border-bottom border-secondary mb-1">
+                                <div class="fw-bold text-white small">{{ session.get('full_name') or 'Candidate' }}</div>
+                                <div class="text-rose small opacity-75">{{ session.get('email', '') }}</div>
+                            </li>
+                            <li>
+                                <a class="dropdown-menu-item text-white text-decoration-none d-block px-3 py-2 rounded small" href="{{ url_for('exam.candidate_dashboard') }}">
+                                    <i class="fa-solid fa-gauge me-2 text-rose"></i> Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-menu-item text-white text-decoration-none d-block px-3 py-2 rounded small" href="{{ url_for('auth.profile') }}">
+                                    <i class="fa-solid fa-id-card me-2 text-info"></i> Student Details
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-menu-item text-white text-decoration-none d-block px-3 py-2 rounded small" href="{{ url_for('auth.list_students') }}">
+                                    <i class="fa-solid fa-users me-2 text-warning"></i> Registered Students
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-menu-item text-danger text-decoration-none d-block px-3 py-2 rounded small" href="{{ url_for('auth.logout') }}">
+                                    <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Sign Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-rose-outline btn-sm">Sign In</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary-monitorexam btn-sm">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-mobile-backdrop" id="sidebarMobileBackdrop" onclick="closeMobileSidebar()"></div>
+
+    <!-- Flash Messages Global Container -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="container py-3" style="{% if request.endpoint in ['exam.dashboard', 'exam.candidate_dashboard'] %}padding-left: 280px !important;{% endif %}">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show border-0 rounded-3 shadow-sm flash-alert-card d-flex align-items-center justify-content-between p-3 mb-2" role="alert">
+              <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid {% if category == 'success' %}fa-circle-check text-success fs-5{% else %}fa-triangle-exclamation text-danger fs-5{% endif %}"></i>
+                <span class="fw-semibold small">{{ message }}</span>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Main Content Area -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center mt-auto">
+        <div class="container">
+            <p class="mb-0 text-rose">&copy; 2026 WatchDesk. Secure AI Exam Proctoring System.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Theme Switcher & Mobile Slide Bar Helpers -->
+    <script>
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.pro-sidebar');
+            const backdrop = document.getElementById('sidebarMobileBackdrop');
+            if (sidebar) {
+                sidebar.classList.toggle('show-mobile-sidebar');
+                if (backdrop) {
+                    backdrop.classList.toggle('show');
+                }
+            }
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.querySelector('.pro-sidebar');
+            const backdrop = document.getElementById('sidebarMobileBackdrop');
+            if (sidebar) {
+                sidebar.classList.remove('show-mobile-sidebar');
+            }
+            if (backdrop) {
+                backdrop.classList.remove('show');
+            }
+        }
+
+        // 3-Mode Theme Switcher Logic (System, Light, Dark)
+        (function() {
+            const STORAGE_KEY = 'watchdesk_theme_mode';
+
+            function getSystemTheme() {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+
+            function applyThemeMode(mode) {
+                const effectiveTheme = mode === 'system' ? getSystemTheme() : mode;
+                document.documentElement.setAttribute('data-theme', effectiveTheme);
+                localStorage.setItem(STORAGE_KEY, mode);
+                updateDropdownUI(mode);
+            }
+
+            window.setWatchDeskTheme = applyThemeMode;
+
+            function updateDropdownUI(mode) {
+                const iconMap = {
+                    'system': 'fa-desktop text-info',
+                    'light': 'fa-sun text-warning',
+                    'dark': 'fa-moon text-rose'
+                };
+                const textMap = {
+                    'system': 'System',
+                    'light': 'Light',
+                    'dark': 'Dark'
+                };
+
+                const currentIcon = document.getElementById('currentThemeIcon');
+                const currentText = document.getElementById('currentThemeText');
+
+                if (currentIcon && currentText) {
+                    currentIcon.className = `fa-solid ${iconMap[mode] || iconMap['system']}`;
+                    currentText.textContent = textMap[mode] || 'System';
+                }
+
+                document.querySelectorAll('.theme-option-btn').forEach(btn => {
+                    const btnMode = btn.getAttribute('data-theme-mode');
+                    const checkIcon = btn.querySelector('.theme-check-icon');
+                    if (btnMode === mode) {
+                        btn.classList.add('active');
+                        if (checkIcon) checkIcon.classList.remove('d-none');
+                    } else {
+                        btn.classList.remove('active');
+                        if (checkIcon) checkIcon.classList.add('d-none');
+                    }
+                });
+            }
+
+            function initThemeSwitcher() {
+                const savedMode = localStorage.getItem(STORAGE_KEY) || 'system';
+                applyThemeMode(savedMode);
+
+                document.querySelectorAll('.theme-option-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const selectedMode = this.getAttribute('data-theme-mode');
+                        applyThemeMode(selectedMode);
+                    });
+                });
+
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                    if ((localStorage.getItem(STORAGE_KEY) || 'system') === 'system') {
+                        applyThemeMode('system');
+                    }
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initThemeSwitcher);
+            } else {
+                initThemeSwitcher();
+            }
+        })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

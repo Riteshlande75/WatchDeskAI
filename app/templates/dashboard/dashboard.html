@@ -1,0 +1,801 @@
+{% extends "base.html" %}
+
+{% block title %} WatchDesk{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Ultra-Professional Fixed Left Sidebar -->
+<aside class="pro-sidebar">
+    <div>
+        <!-- Single Tab List Container for 100% Reliable Tab Switching -->
+        <div class="nav flex-column pro-nav-pills" id="proSidebarTab">
+            
+            <div class="pro-sidebar-section-title">Core Menu</div>
+            <button class="nav-link active" id="tab-overview" onclick="switchTab('#overview-pane')" type="button">
+                <i class="fa-solid fa-house text-rose"></i> <span>Dashboard</span>
+            </button>
+            <button class="nav-link" id="tab-myexams" onclick="switchTab('#myexams-pane')" type="button">
+                <i class="fa-solid fa-pen-to-square text-warning"></i> <span>My Exams</span>
+                <span class="badge bg-rose-subtle text-rose ms-auto extra-small">{{ available_exams | length }}</span>
+            </button>
+
+            <div class="pro-sidebar-section-title mt-3">Reports</div>
+            <button class="nav-link" id="tab-history" onclick="switchTab('#history-pane')" type="button">
+                <i class="fa-solid fa-file-lines text-info"></i> <span>Exam History</span>
+            </button>
+            <button class="nav-link" id="tab-results" onclick="switchTab('#results-pane')" type="button">
+                <i class="fa-solid fa-medal text-warning"></i> <span>Results</span>
+            </button>
+            <button class="nav-link" id="tab-performance" onclick="switchTab('#performance-pane')" type="button">
+                <i class="fa-solid fa-chart-line text-success"></i> <span>Performance</span>
+            </button>
+
+        </div>
+    </div>
+</aside>
+
+<!-- Main Workspace Content Area -->
+<div class="pro-main-wrapper">
+
+    <!-- Dynamic Tab Content Panes (Each Sidebar Item Opens Only Its Page) -->
+    <div class="dash-content" id="dashboardTabContent">
+        
+        <!-- 1. 🏠 Dashboard Overview Tab Page -->
+        <div class="dash-pane" id="overview-pane" role="tabpanel" aria-labelledby="tab-overview" style="display:block;">
+            
+            <!-- Header Banner Widget -->
+            <div class="dashboard-header-card mb-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h3 class="fw-bold text-white mb-1">Candidate Overview</h3>
+                        <p class="text-offwhite opacity-75 mb-0 small">Welcome back, <span class="text-rose fw-semibold">{{ candidate_name or session.get('full_name', 'Candidate') }}</span>! Here is your active proctoring status and featured assessment summary.</p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                        <span class="badge badge-rose px-3 py-2">
+                            <i class="fa-solid fa-shield-halved me-1"></i> Proctoring Status: Active
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stat Metrics Widgets -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-md-3">
+                    <div class="stat-card-widget">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-wrapper">
+                                <i class="fa-solid fa-file-pen"></i>
+                            </div>
+                            <div>
+                                <div class="text-offwhite opacity-75 small fw-medium">Available Exams</div>
+                                <div class="fs-4 fw-bold text-white">{{ stats.available_count }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="stat-card-widget">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-wrapper text-info" style="background: rgba(13, 202, 240, 0.15);">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div>
+                                <div class="text-offwhite opacity-75 small fw-medium">Exams Taken</div>
+                                <div class="fs-4 fw-bold text-white">{{ stats.total_attempts }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="stat-card-widget">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-wrapper text-success" style="background: rgba(25, 135, 84, 0.15);">
+                                <i class="fa-solid fa-trophy"></i>
+                            </div>
+                            <div>
+                                <div class="text-offwhite opacity-75 small fw-medium">Passed Exams</div>
+                                <div class="fs-4 fw-bold text-white">{{ stats.passed_attempts }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="stat-card-widget">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon-wrapper text-warning" style="background: rgba(255, 193, 7, 0.15);">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <div class="text-offwhite opacity-75 small fw-medium">Average Score</div>
+                                <div class="fs-4 fw-bold text-white">{{ stats.avg_score }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <!-- Featured Assessment Launcher -->
+                <div class="col-lg-8">
+                    <div class="performance-card h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-white mb-0">
+                                <i class="fa-solid fa-laptop-code text-rose me-2"></i> Featured Assessment
+                            </h5>
+                            <button type="button" class="btn btn-sm btn-rose-outline" onclick="document.getElementById('tab-myexams').click()">View All Exams &rarr;</button>
+                        </div>
+                        
+                        {% if available_exams and available_exams | length > 0 %}
+                            {% set feat = available_exams[0] %}
+                            <div class="p-3 rounded-3" style="background: rgba(157, 126, 143, 0.08); border: 1px solid var(--border-subtle);">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge-category">{{ feat.category }}</span>
+                                    <span class="text-rose small fw-bold"><i class="fa-regular fa-clock me-1"></i>{{ feat.duration_minutes }} Mins</span>
+                                </div>
+                                <h4 class="fw-bold text-white mb-2">{{ feat.title }}</h4>
+                                <p class="text-offwhite opacity-75 small mb-3">{{ feat.description }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small text-offwhite">Pass Mark: <strong class="text-success">{{ feat.pass_percentage }}%</strong></span>
+                                    <a href="{{ url_for('exam.system_check', exam_id=feat.id) }}" class="btn btn-primary-monitorexam btn-sm px-4">
+                                        Start Assessment &rarr;
+                                    </a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="text-offwhite opacity-75 small">No featured exams available at this time.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- AI Integrity Status Card -->
+                <div class="col-lg-4">
+                    <div class="performance-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <h5 class="fw-bold text-white mb-3">
+                                <i class="fa-solid fa-shield-halved text-success me-2"></i> Proctoring Integrity
+                            </h5>
+                            <div class="text-center py-2">
+                                <div class="fs-1 fw-extrabold text-success mb-1">100%</div>
+                                <div class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 mb-2">CLEAN PROCTOR RECORD</div>
+                                <p class="text-offwhite opacity-75 extra-small">AI face detection & browser activity monitoring active.</p>
+                            </div>
+                        </div>
+                        <div class="p-2 rounded bg-dark border border-secondary text-center extra-small text-offwhite">
+                            <i class="fa-solid fa-video me-1 text-warning"></i> Device Cam & Mic Verified
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Exam Activity Summary -->
+            <div class="performance-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-white mb-0">
+                        <i class="fa-solid fa-clock-rotate-left text-rose me-2"></i> Recent Exam Activity
+                    </h5>
+                    <button type="button" class="btn btn-sm btn-rose-outline" onclick="document.getElementById('tab-history').click()">View Full History &rarr;</button>
+                </div>
+                {% if history or submissions %}
+                    <div class="table-responsive">
+                        <table class="table table-custom-monitorexam mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Assessment Title</th>
+                                    <th>Category</th>
+                                    <th>Score</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in (history or submissions)[:3] %}
+                                {% set pct = sub.percentage if (sub.percentage is defined and sub.percentage is not none) else 0 %}
+                                {% set pass_mark = sub.pass_percentage if (sub.pass_percentage is defined and sub.pass_percentage is not none) else 60 %}
+                                <tr>
+                                    <td class="fw-bold text-white">{{ sub.exam_title }}</td>
+                                    <td><span class="badge-category">{{ sub.exam_category }}</span></td>
+                                    <td class="fw-bold text-white">{{ sub.score | default(0) }} / {{ sub.total_marks | default(5) }} ({{ pct }}%)</td>
+                                    <td>
+                                        {% if sub.status == 'completed' %}
+                                            {% if pct >= pass_mark %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">PASSED</span>
+                                            {% else %}
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">FAILED</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">IN PROGRESS</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sub.status == 'completed' %}
+                                            <a href="{{ url_for('exam.exam_result', submission_id=sub.id) }}" class="btn btn-rose-outline btn-sm py-1 px-2.5">
+                                                <i class="fa-regular fa-file-lines me-1"></i> Review Report
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for('exam.exam_room', submission_id=sub.id) }}" class="btn btn-primary-monitorexam btn-sm py-1 px-2.5">
+                                                Resume &rarr;
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-offwhite opacity-75 small mb-0">You have not attempted any exam assessments yet.</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- 2. 📝 My Exams Tab Page -->
+        <div class="dash-pane" id="myexams-pane" role="tabpanel" aria-labelledby="tab-myexams" style="display:none;">
+            <div class="mb-4">
+                
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pb-2 border-bottom" style="border-color: var(--border-subtle) !important;">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1">
+                            <i class="fa-solid fa-list-check me-2 text-rose"></i> Available Examinations
+                        </h3>
+                        <p class="text-offwhite opacity-75 small mb-0">Select an assessment below to launch the automated hardware, webcam, and security environment test.</p>
+                    </div>
+                    <span class="badge badge-rose px-3 py-2 fs-6">
+                        <i class="fa-solid fa-laptop-code me-1"></i> {{ available_exams | length }} Exams Active
+                    </span>
+                </div>
+
+                <!-- Live Search & Category Filter Bar -->
+                <div class="row align-items-center g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="input-group input-group-monitorexam">
+                            <span class="input-group-text input-icon-text"><i class="fa-solid fa-magnifying-glass text-rose"></i></span>
+                            <input type="text" id="examSearchInput" class="form-control form-control-monitorexam" placeholder="Search exams by title or keyword..." onkeyup="filterExamCards()">
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="btn-group border border-secondary p-1 rounded-3 bg-dark" role="group" id="categoryFilterGroup">
+                            <button type="button" class="btn btn-sm btn-rose-outline active px-3" onclick="filterExamCategory('all', this)">All</button>
+                            <button type="button" class="btn btn-sm btn-rose-outline px-3" onclick="filterExamCategory('Computer Science', this)">Computer Science</button>
+                            <button type="button" class="btn btn-sm btn-rose-outline px-3" onclick="filterExamCategory('Cybersecurity', this)">Cybersecurity</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4" id="examCardsGrid">
+                    {% for exam in available_exams %}
+                    <div class="col-md-6 col-lg-4 exam-card-wrapper" data-title="{{ exam.title }}" data-desc="{{ exam.description }}" data-category="{{ exam.category }}">
+                        <div class="exam-card-custom h-100 d-flex flex-column">
+                            <div class="exam-card-body d-flex flex-column h-100">
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="badge-category">{{ exam.category }}</span>
+                                    <span class="text-rose small fw-bold bg-dark px-2 py-1 rounded border border-secondary">
+                                        <i class="fa-regular fa-clock me-1 text-warning"></i>{{ exam.duration_minutes }} Mins
+                                    </span>
+                                </div>
+
+                                <h5 class="fw-bold text-white mb-2">{{ exam.title }}</h5>
+                                <p class="text-offwhite opacity-75 small mb-3 flex-grow-1" style="line-height: 1.5;">
+                                    {{ exam.description }}
+                                </p>
+                                
+                                <div class="exam-meta-box p-3 mb-3 rounded-3" style="background: #0F0F11; border: 1px solid var(--border-subtle);">
+                                    <div class="d-flex justify-content-between text-offwhite extra-small mb-1">
+                                        <span>Total Marks: <strong class="text-white">{{ exam.total_marks }} Marks</strong></span>
+                                        <span>Pass Mark: <strong class="text-success">{{ exam.pass_percentage }}%</strong></span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 4px; background: rgba(255,255,255,0.1);">
+                                        <div class="progress-bar bg-rose" style="width: {{ exam.pass_percentage }}%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between extra-small text-offwhite mb-3 px-1">
+                                    <span><i class="fa-solid fa-shield-halved text-success me-1"></i> Proctoring On</span>
+                                    <span class="text-warning"><i class="fa-solid fa-video me-1"></i> Cam & Mic Check</span>
+                                </div>
+
+                                <a href="{{ url_for('exam.system_check', exam_id=exam.id) }}" class="btn btn-primary-monitorexam w-100 py-2.5 text-center fw-bold mt-auto">
+                                    Take Device Test & Start &rarr;
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12">
+                        <div class="empty-state-card text-center py-5 rounded-3">
+                            <i class="fa-solid fa-folder-open text-rose fs-1 mb-2"></i>
+                            <p class="text-offwhite opacity-75">No assessments are currently available.</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 📄 Exam History Tab Page -->
+        <div class="dash-pane" id="history-pane" role="tabpanel" aria-labelledby="tab-history" style="display:none;">
+            <div>
+            <div class="mb-4">
+                
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pb-2 border-bottom" style="border-color: var(--border-subtle) !important;">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1">
+                            <i class="fa-solid fa-clock-rotate-left me-2 text-rose"></i> Exam Attempt History
+                        </h3>
+                        <p class="text-offwhite opacity-75 small mb-0">Comprehensive record of all past assessment attempts, scores, and proctoring audit links.</p>
+                    </div>
+                    <a href="{{ url_for('exam.export_history') }}" class="btn btn-sm btn-rose-outline text-nowrap py-2 px-3 fw-bold">
+                        <i class="fa-solid fa-file-csv me-1.5 text-success"></i> Export History (CSV)
+                    </a>
+                </div>
+
+                <!-- Live Search Bar for History Tab -->
+                <div class="mb-4">
+                    <div class="input-group input-group-monitorexam" style="max-width: 420px;">
+                        <span class="input-group-text input-icon-text"><i class="fa-solid fa-magnifying-glass text-rose"></i></span>
+                        <input type="text" id="historySearchInput" class="form-control form-control-monitorexam" placeholder="Search history by title, category, or status..." onkeyup="filterHistoryTable()">
+                    </div>
+                </div>
+
+                <div class="table-card-wrapper table-responsive rounded-3">
+                    <table class="table table-custom-monitorexam mb-0" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Assessment Title</th>
+                                <th>Category</th>
+                                <th>Started At</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in history or submissions %}
+                            {% set pct = sub.percentage if (sub.percentage is defined and sub.percentage is not none) else 0 %}
+                            {% set pass_mark = sub.pass_percentage if (sub.pass_percentage is defined and sub.pass_percentage is not none) else 60 %}
+                            {% set is_passed = (pct >= pass_mark) %}
+                            {% if sub.status == 'completed' %}
+                                {% set hist_status = 'PASSED' if is_passed else 'FAILED' %}
+                            {% else %}
+                                {% set hist_status = 'IN_PROGRESS' %}
+                            {% endif %}
+                            <tr class="history-row-item" data-title="{{ sub.exam_title or 'Assessment' }}" data-category="{{ sub.exam_category or 'General' }}" data-status="{{ hist_status }}">
+                                <td class="fw-bold text-white">{{ sub.exam_title or 'Assessment' }}</td>
+                                <td><span class="badge-category">{{ sub.exam_category or 'General' }}</span></td>
+                                <td class="small opacity-75 text-offwhite">{{ sub.started_at or sub.submitted_at or 'Recently' }}</td>
+                                <td class="fw-bold text-white">{{ sub.score | default(0) }} / {{ sub.total_marks | default(5) }}</td>
+                                <td>
+                                    <span class="fw-bold {% if sub.status == 'completed' %}{% if is_passed %}text-success{% else %}text-danger{% endif %}{% else %}text-warning{% endif %}">
+                                        {{ pct }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if sub.status == 'completed' %}
+                                        {% if is_passed %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">PASSED</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">FAILED</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">IN PROGRESS</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if sub.status == 'completed' %}
+                                        <a href="{{ url_for('exam.exam_result', submission_id=sub.id) }}" class="btn btn-rose-outline btn-sm">
+                                            <i class="fa-regular fa-file-lines me-1"></i> Review Report
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('exam.exam_room', submission_id=sub.id) }}" class="btn btn-primary-monitorexam btn-sm py-1 px-2">
+                                            Resume Exam &rarr;
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-offwhite opacity-75">
+                                    You have not completed any exam assessments yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- 4. 🏆 Results Tab Page -->
+        <div class="dash-pane" id="results-pane" role="tabpanel" aria-labelledby="tab-results" style="display:none;">
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pb-2 border-bottom" style="border-color: var(--border-subtle) !important;">
+                    <div>
+                        <h3 class="fw-bold mb-1">
+                            <i class="fa-solid fa-medal me-2 text-warning"></i> My Results
+                        </h3>
+                        <p class="text-secondary small mb-0">Score scorecards for all your completed assessments.</p>
+                    </div>
+                    <div class="input-group input-group-monitorexam" style="max-width: 320px;">
+                        <span class="input-group-text input-icon-text"><i class="fa-solid fa-magnifying-glass text-rose"></i></span>
+                        <input type="text" id="resultScorecardSearch" class="form-control form-control-monitorexam" placeholder="Search results..." onkeyup="filterResultScorecards()">
+                    </div>
+                </div>
+
+                <div class="row g-4" id="resultScorecardsGrid">
+                    {% for sub in history or submissions %}
+                        {% set pct = sub.percentage if (sub.percentage is defined and sub.percentage is not none) else 0 %}
+                        {% set pass_mark = sub.pass_percentage if (sub.pass_percentage is defined and sub.pass_percentage is not none) else 60 %}
+                        {% set is_passed = (pct >= pass_mark) %}
+                        <div class="col-md-6 col-lg-4 result-card-wrapper" data-title="{{ sub.exam_title or '' }}" data-category="{{ sub.exam_category or '' }}">
+                            <div class="performance-card h-100 d-flex flex-column position-relative overflow-hidden">
+                                <!-- Top accent bar -->
+                                <div style="height:4px; width:100%; background: {% if sub.status == 'completed' %}{% if is_passed %}linear-gradient(90deg,#28a745,#20c997){% else %}linear-gradient(90deg,#dc3545,#fd7e14){% endif %}{% else %}linear-gradient(90deg,#ffc107,#fd7e14){% endif %}; border-radius:4px 4px 0 0;"></div>
+                                <div class="p-3 pt-3 flex-grow-1 d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="badge-category">{{ sub.exam_category or 'General' }}</span>
+                                        {% if sub.status == 'completed' %}
+                                            {% if is_passed %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i>PASSED</span>
+                                            {% else %}
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="fa-solid fa-circle-xmark me-1"></i>FAILED</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1"><i class="fa-solid fa-hourglass-half me-1"></i>IN PROGRESS</span>
+                                        {% endif %}
+                                    </div>
+                                    <h5 class="fw-bold mb-3" style="font-size:0.95rem; line-height:1.4;">{{ sub.exam_title or 'Assessment' }}</h5>
+
+                                    <!-- Score Ring -->
+                                    <div class="text-center my-3">
+                                        <div style="position:relative; display:inline-flex; align-items:center; justify-content:center; width:100px; height:100px;">
+                                            <svg width="100" height="100" viewBox="0 0 100 100" style="transform:rotate(-90deg);">
+                                                <circle cx="50" cy="50" r="42" fill="none" stroke="var(--border-subtle)" stroke-width="10"/>
+                                                <circle cx="50" cy="50" r="42" fill="none"
+                                                    stroke="{% if sub.status == 'completed' %}{% if is_passed %}#28a745{% else %}#dc3545{% endif %}{% else %}#ffc107{% endif %}"
+                                                    stroke-width="10"
+                                                    stroke-dasharray="{{ (pct / 100 * 263.9) | round(1) }} 263.9"
+                                                    stroke-linecap="round"/>
+                                            </svg>
+                                            <div style="position:absolute; text-align:center;">
+                                                <div class="fw-bold fs-5" style="line-height:1;">{{ pct }}%</div>
+                                                <div class="extra-small opacity-75">Score</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-3 text-center">
+                                        <div class="col-6">
+                                            <div class="p-2 rounded-2" style="background:var(--bg-input); border:1px solid var(--border-subtle);">
+                                                <div class="opacity-75 extra-small">Score</div>
+                                                <div class="fw-bold small">{{ sub.score | default(0) }} / {{ sub.total_marks | default(5) }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="p-2 rounded-2" style="background:var(--bg-input); border:1px solid var(--border-subtle);">
+                                                <div class="opacity-75 extra-small">Pass Mark</div>
+                                                <div class="fw-bold text-success small">{{ pass_mark }}%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-auto">
+                                        {% if sub.status == 'completed' %}
+                                            <a href="{{ url_for('exam.exam_result', submission_id=sub.id) }}" class="btn btn-rose-outline w-100 btn-sm py-2">
+                                                <i class="fa-regular fa-file-lines me-1"></i> View Full Report
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for('exam.exam_room', submission_id=sub.id) }}" class="btn btn-primary-monitorexam w-100 btn-sm py-2">
+                                                Resume Exam &rarr;
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-12">
+                            <div class="empty-state-card text-center py-5 rounded-3">
+                                <i class="fa-solid fa-medal text-warning fs-1 mb-2"></i>
+                                <p class="text-secondary opacity-75">No results found. Complete an exam to see your scorecards here.</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 📊 Performance Tab Page -->
+        <div class="dash-pane" id="performance-pane" role="tabpanel" aria-labelledby="tab-performance" style="display:none;">
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 pb-2 border-bottom" style="border-color: var(--border-subtle) !important;">
+                    <div>
+                        <h3 class="fw-bold mb-1">
+                            <i class="fa-solid fa-chart-line me-2 text-success"></i> Performance Analytics
+                        </h3>
+                        <p class="text-secondary small mb-0">Visual breakdown of your score trends and category mastery.</p>
+                    </div>
+                </div>
+
+                <!-- Performance Summary KPIs -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="stat-card-widget">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="stat-icon-wrapper"><i class="fa-solid fa-file-pen"></i></div>
+                                <div>
+                                    <div class="opacity-75 small fw-medium">Total Attempts</div>
+                                    <div class="fs-4 fw-bold">{{ stats.total_attempts }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="stat-card-widget">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="stat-icon-wrapper text-success" style="background:rgba(25,135,84,0.15);"><i class="fa-solid fa-trophy"></i></div>
+                                <div>
+                                    <div class="opacity-75 small fw-medium">Passed</div>
+                                    <div class="fs-4 fw-bold text-success">{{ stats.passed_attempts }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="stat-card-widget">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="stat-icon-wrapper text-warning" style="background:rgba(255,193,7,0.15);"><i class="fa-solid fa-chart-bar"></i></div>
+                                <div>
+                                    <div class="opacity-75 small fw-medium">Avg Score</div>
+                                    <div class="fs-4 fw-bold text-warning">{{ stats.avg_score }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="stat-card-widget">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="stat-icon-wrapper text-info" style="background:rgba(13,202,240,0.15);"><i class="fa-solid fa-percent"></i></div>
+                                <div>
+                                    <div class="opacity-75 small fw-medium">Pass Rate</div>
+                                    <div class="fs-4 fw-bold text-info">{{ stats.pass_rate }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row g-4 mb-4">
+                    <!-- Score Trend Line Chart -->
+                    <div class="col-lg-8">
+                        <div class="performance-card h-100">
+                            <h5 class="fw-bold mb-4"><i class="fa-solid fa-arrow-trend-up text-success me-2"></i>Score Trend</h5>
+                            <canvas id="scoreTrendChart" height="220"></canvas>
+                        </div>
+                    </div>
+                    <!-- Category Doughnut Chart -->
+                    <div class="col-lg-4">
+                        <div class="performance-card h-100">
+                            <h5 class="fw-bold mb-4"><i class="fa-solid fa-chart-pie text-rose me-2"></i>Category Mastery</h5>
+                            <canvas id="categoryDonutChart" height="220"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Tab Switching (bulletproof, no Bootstrap dependency) ─────────────────────
+function switchTab(targetSelector) {
+    if (!targetSelector) return;
+    var targetId = targetSelector.replace('#', '');
+    var targetPane = document.getElementById(targetId);
+
+    if (!targetPane) {
+        console.error('[WatchDesk] Pane not found for selector:', targetSelector);
+        return;
+    }
+
+    // 1. Reset active button states
+    var btns = document.querySelectorAll('.pro-nav-pills .nav-link');
+    for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.remove('active');
+    }
+
+    // 2. Highlight matching sidebar button
+    var cleanName = targetId.replace('-pane', '');
+    var activeBtn = document.getElementById('tab-' + cleanName);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+
+    // 3. Hide ALL panes
+    var panes = document.querySelectorAll('.dash-pane');
+    for (var j = 0; j < panes.length; j++) {
+        panes[j].style.setProperty('display', 'none', 'important');
+    }
+
+    // 4. Show target pane
+    targetPane.style.setProperty('display', 'block', 'important');
+
+    // 5. Trigger Performance charts if switching to performance-pane
+    if ((targetId === 'performance-pane') && typeof window.renderAnalyticsCharts === 'function') {
+        setTimeout(window.renderAnalyticsCharts, 100);
+    }
+
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+}
+
+window.activateTabBySelector = switchTab;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Deep-link via ?tab= query param or URL hash
+    var urlParams = new URLSearchParams(window.location.search);
+    var tabParam = urlParams.get('tab');
+    var hash = window.location.hash;
+    var deepLink = tabParam ? ('#' + tabParam.replace('#','') + '-pane') : (hash || null);
+    if (deepLink) switchTab(deepLink);
+});
+
+// ── Exam Search & Filter ─────────────────────────────────────────────────────
+function filterExamCards() {
+    var query = document.getElementById('examSearchInput').value.toLowerCase();
+    document.querySelectorAll('.exam-card-wrapper').forEach(function(card) {
+        var title = (card.getAttribute('data-title') || '').toLowerCase();
+        var desc  = (card.getAttribute('data-desc')  || '').toLowerCase();
+        card.style.display = (title.includes(query) || desc.includes(query)) ? '' : 'none';
+    });
+}
+
+function filterExamCategory(category, btn) {
+    document.querySelectorAll('#categoryFilterGroup button').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    btn.classList.add('active');
+    document.querySelectorAll('.exam-card-wrapper').forEach(function(card) {
+        var cat = card.getAttribute('data-category') || '';
+        card.style.display = (category === 'all' || cat === category) ? '' : 'none';
+    });
+}
+
+// ── History Table Search ──────────────────────────────────────────────────────
+function filterHistoryTable() {
+    var searchEl = document.getElementById('historySearchInput');
+    if (!searchEl) return;
+    var query = searchEl.value.toLowerCase().trim();
+    document.querySelectorAll('.history-row-item').forEach(function(row) {
+        var title  = (row.getAttribute('data-title')    || '').toLowerCase();
+        var cat    = (row.getAttribute('data-category') || '').toLowerCase();
+        var status = (row.getAttribute('data-status')   || '').toLowerCase();
+        row.style.display = (!query || title.includes(query) || cat.includes(query) || status.includes(query)) ? '' : 'none';
+    });
+}
+
+// ── Results Scorecard Search ──────────────────────────────────────────────────
+function filterResultScorecards() {
+    var searchEl = document.getElementById('resultScorecardSearch');
+    var query = searchEl ? searchEl.value.toLowerCase().trim() : '';
+    document.querySelectorAll('.result-card-wrapper').forEach(function(card) {
+        var title = (card.getAttribute('data-title')    || '').toLowerCase();
+        var cat   = (card.getAttribute('data-category') || '').toLowerCase();
+        card.style.display = (!query || title.includes(query) || cat.includes(query)) ? '' : 'none';
+    });
+}
+</script>
+
+<!-- Chart.js for Performance Tab -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+var analyticsData = {
+    trend_labels:   {{ analytics.trend_labels   | tojson | safe if analytics and analytics.trend_labels   else '[]' }},
+    trend_values:   {{ analytics.trend_values   | tojson | safe if analytics and analytics.trend_values   else '[]' }},
+    category_mastery: {{ analytics.category_mastery | tojson | safe if analytics and analytics.category_mastery else '{}' }}
+};
+
+// Fallback: derive trend + category data from the history table when backend
+// analytics is empty (e.g. no completed submissions yet).
+(function() {
+    var rows = document.querySelectorAll('#historyTable tbody tr.history-row-item');
+    if (analyticsData.trend_labels.length === 0 && rows.length > 0) {
+        rows.forEach(function(row, idx) {
+            var el = row.querySelector('td:nth-child(5) span');
+            analyticsData.trend_labels.push('Attempt #' + (idx + 1));
+            analyticsData.trend_values.push(el ? parseFloat(el.textContent) || 0 : 0);
+        });
+    }
+    if (Object.keys(analyticsData.category_mastery).length === 0 && rows.length > 0) {
+        analyticsData.category_mastery = {};
+        rows.forEach(function(row) {
+            var cat = (row.getAttribute('data-category') || 'General');
+            var el  = row.querySelector('td:nth-child(5) span');
+            var pct = el ? parseFloat(el.textContent) || 0 : 0;
+            if (!(cat in analyticsData.category_mastery)) analyticsData.category_mastery[cat] = [];
+            analyticsData.category_mastery[cat].push(pct);
+        });
+        var agg = {};
+        Object.keys(analyticsData.category_mastery).forEach(function(cat) {
+            var scores = analyticsData.category_mastery[cat];
+            var sum = scores.reduce(function(a, b) { return a + b; }, 0);
+            agg[cat] = Math.round((sum / scores.length) * 10) / 10;
+        });
+        analyticsData.category_mastery = agg;
+    }
+})();
+
+var scoreTrendChartInstance = null;
+var categoryDonutChartInstance = null;
+
+window.renderAnalyticsCharts = function() {
+    var trendCtx = document.getElementById('scoreTrendChart');
+    if (trendCtx) {
+        if (scoreTrendChartInstance) scoreTrendChartInstance.destroy();
+        scoreTrendChartInstance = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: analyticsData.trend_labels.length ? analyticsData.trend_labels : ['No Data'],
+                datasets: [{
+                    label: 'Score %',
+                    data: analyticsData.trend_values.length ? analyticsData.trend_values : [0],
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40,167,69,0.12)',
+                    tension: 0.4,
+                    pointBackgroundColor: '#28a745',
+                    pointRadius: 5,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#c9b8c2' } } },
+                scales: {
+                    x: { ticks: { color: '#c9b8c2' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { min: 0, max: 100,
+                         ticks: { color: '#c9b8c2', callback: function(v){ return v+'%'; } },
+                         grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+    }
+
+var donutCtx = document.getElementById('categoryDonutChart');
+    if (donutCtx) {
+        if (categoryDonutChartInstance) categoryDonutChartInstance.destroy();
+        var mastery = analyticsData.category_mastery || {};
+        var catLabels = Object.keys(mastery);
+        var catValues = catLabels.map(function(k) { return mastery[k]; });
+        var palette = ['#9d7e8f','#28a745','#0dcaf0','#ffc107','#dc3545','#6f42c1'];
+        if (!catLabels.length) { catLabels = ['No Data']; catValues = [100]; }
+        categoryDonutChartInstance = new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: catLabels,
+                datasets: [{ data: catValues,
+                    backgroundColor: palette.slice(0, catLabels.length),
+                    borderColor: '#1a1a1d', borderWidth: 3 }]
+            },
+            options: {
+                responsive: true, cutout: '68%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#c9b8c2', padding: 12, font: { size: 11 } } },
+                    tooltip: { callbacks: { label: function(ctx){ return ctx.label+': '+ctx.parsed+'%'; } } }
+                }
+            }
+        });
+    }
+};
+</script>
+{% endblock %}
