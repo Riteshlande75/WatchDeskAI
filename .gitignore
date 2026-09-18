@@ -14,3 +14,7 @@ ENV/
 # System files
 .DS_Store
 Thumbs.db
+Agile documentation/~$Agile_Template_v0.1 (1).xlsx
+Agile documentation/~$Defect_Tracker Template_v0.1.xlsx
+.gitignore
+Agile documentation/~$Unit_Test_Plan_v0.1.xlsx
